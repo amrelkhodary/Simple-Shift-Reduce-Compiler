@@ -15,7 +15,7 @@
 //including necessary libraries
 #include <stdio.h>
 #include <stdlib.h>
-
+#include <string.h>
 //stack type definition 
 typedef struct Stack {
     char** symbols;
@@ -27,14 +27,42 @@ typedef struct Stack {
 Stack* createStack();
 void push(Stack* stack, char* str);
 char* pop(Stack* stack);
+char* printStack(Stack* stack);
 int reduce(Stack* stack);
 void removeWhitespace(Stack* stack);
+
 //program constants
 const int REDUCTION_MATCHED = 0;
 const int NO_REDUCTION_MATCHED = 1;
 
 int main() {
+    ///get user input
+    char buffer[100];
+    int index = 0;
 
+    printf("Enter an Expression: \n");
+    fgets(buffer, sizeof(buffer), stdin);
+
+    //create the stack
+    Stack* stack = createStack();
+
+    //shift-reduce cycle
+    char temp[2];
+    while(buffer[index]) {
+        //SHIFT CYCLE
+        //turn character into a string
+        temp[0] = buffer[index];
+        temp[1] = '\0';
+        push(stack, temp);
+        printf("Shift: %s", printStack(stack));
+
+        //REDUCE CYCLE
+        while(reduce(stack) == REDUCTION_MATCHED){
+            printf("Reduce: %s", printStack(stack));
+        }
+
+        index++;
+    }
     return 0;
 }
 
@@ -45,13 +73,24 @@ Stack* createStack() {
     //allocate memory for the stack 2d array of symbols
     stack -> symbols = (char**) malloc(100 * sizeof(char*));
     for(int i = 0; i<100; i++) {
-        stack -> symbols[i] = (char*) malloc(10 * sizeof(char));
+        stack -> symbols[i] = (char*) calloc(10, sizeof(char));
     }
 
     //initialize top to be -1
     stack -> top = -1;
     
     return stack;
+}
+
+char* printStack(Stack* stack) {
+    char* returnstr = "";
+    for(int i = 0; i<= stack -> top; i++) {
+        strcat(returnstr, stack -> symbols[i]);
+        strcat(returnstr, " ");
+    }
+
+    strcat(returnstr, "\n");
+    return returnstr;
 }
 
 void push(Stack* stack, char* str) {
