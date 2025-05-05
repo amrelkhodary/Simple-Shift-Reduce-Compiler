@@ -27,7 +27,11 @@ typedef struct Stack {
 Stack* createStack();
 void push(Stack* stack, char* str);
 char* pop(Stack* stack);
-void reduce(Stack* stack);
+int reduce(Stack* stack);
+void removeWhitespace(Stack* stack);
+//program constants
+const int REDUCTION_MATCHED = 0;
+const int NO_REDUCTION_MATCHED = 1;
 
 int main() {
 
@@ -51,11 +55,77 @@ Stack* createStack() {
 }
 
 void push(Stack* stack, char* str) {
-    stack -> symbols[++stack -> top] = str;
+    //condition added to ignore whitespaces
+    if(str != " ") {
+        stack -> symbols[++stack -> top] = str;
+    }
 }
 
 char* pop(Stack* stack) {
     int temp = stack -> top;
     stack -> top--;
     return stack -> symbols[temp];
+}
+
+/*
+    This function goes through the rules, and if a rule applies, it pops symbols from 
+    the stack, replaces them with LHS and returns REDUCTION_MATCHED, otherwise, it returns
+    NO_REDUCTION_MATCHED
+*/
+int reduce(Stack* stack) {
+        //RULE 1: E -> E + E
+        if(stack -> top >= 2 &&
+          (stack -> symbols[stack -> top] == "E") &&
+          (stack -> symbols[stack -> top - 1] == "+") &&
+          (stack -> symbols[stack -> top - 2] == "E")) {
+            //remove the symbols from the stack
+            pop(stack);
+            pop(stack);
+            pop(stack);
+
+            //replace them with the LHS of the rule
+            push(stack, "E");
+            return REDUCTION_MATCHED;
+        } 
+        //RULE 2: E -> E * E
+        else if(stack -> top >= 2 &&
+          (stack -> symbols[stack -> top] == "E") &&
+          (stack -> symbols[stack -> top - 1] == "*") &&
+          (stack -> symbols[stack -> top - 2] == "E")) {
+            //remove the symbols from the stack
+            pop(stack);
+            pop(stack);
+            pop(stack);
+
+            //replace them wth the LHS of the rule
+            push(stack, "E");
+            return REDUCTION_MATCHED;
+        }
+        //RULE 3: E -> id
+        else if(stack -> top >= 0 &&
+        (stack -> symbols[stack -> top][0] >= 'a') &&
+        (stack -> symbols[stack -> top][0] <= 'z')) {
+            //remove the symbols from the stack
+            pop(stack);
+
+            //replace them with the LHS of the rule
+            push(stack, "E");
+            return REDUCTION_MATCHED;
+        }
+        //RULE 4: E -> (E)
+        else if(stack -> top >= 2 && 
+               (stack -> symbols[stack -> top] == ")") &&
+               (stack -> symbols[stack -> top - 1] == "E") &&
+               (stack -> symbols[stack -> top - 2] == "(")) {
+                    //remove the symbols from the stack
+                    pop(stack);
+                    pop(stack);
+                    pop(stack);
+
+                    //replace them with the LHS of the rule
+                    push(stack, "E");
+                    return REDUCTION_MATCHED;
+        }
+    
+    return NO_REDUCTION_MATCHED;
 }
