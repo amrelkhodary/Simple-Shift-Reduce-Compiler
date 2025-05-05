@@ -1,4 +1,5 @@
 /*
+
     This is a simple shift-reduce compiler that accepts the following rules:
     E -> E + E
     E -> E * E
@@ -29,7 +30,6 @@ void push(Stack* stack, char* str);
 char* pop(Stack* stack);
 char* printStack(Stack* stack);
 int reduce(Stack* stack);
-void removeWhitespace(Stack* stack);
 
 //program constants
 const int REDUCTION_MATCHED = 0;
@@ -42,6 +42,12 @@ int main() {
 
     printf("Enter an Expression: \n");
     fgets(buffer, sizeof(buffer), stdin);
+
+    // Remove newline if present
+    size_t len = strlen(buffer);
+    if (len > 0 && buffer[len-1] == '\n') {
+        buffer[len-1] = '\0';
+    }
 
     //create the stack
     Stack* stack = createStack();
@@ -63,6 +69,16 @@ int main() {
 
         index++;
     }
+
+    //apply reduce one last time
+    reduce(stack);
+
+    if(stack -> top == 0 && strcmp(stack -> symbols[stack -> top], "E") == 0)  {
+        printf("String is valid!\n");
+    }
+    else {
+        printf("String is NOT valid!\n");
+    }
     return 0;
 }
 
@@ -83,7 +99,7 @@ Stack* createStack() {
 }
 
 char* printStack(Stack* stack) {
-    char* returnstr = "";
+    char* returnstr = (char*) malloc(100 * sizeof(char));
     for(int i = 0; i<= stack -> top; i++) {
         strcat(returnstr, stack -> symbols[i]);
         strcat(returnstr, " ");
@@ -95,8 +111,8 @@ char* printStack(Stack* stack) {
 
 void push(Stack* stack, char* str) {
     //condition added to ignore whitespaces
-    if(str != " ") {
-        stack -> symbols[++stack -> top] = str;
+    if(strcmp(str, " ") != 0) {
+        strcpy(stack -> symbols[++stack -> top], str);
     }
 }
 
@@ -114,9 +130,9 @@ char* pop(Stack* stack) {
 int reduce(Stack* stack) {
         //RULE 1: E -> E + E
         if(stack -> top >= 2 &&
-          (stack -> symbols[stack -> top] == "E") &&
-          (stack -> symbols[stack -> top - 1] == "+") &&
-          (stack -> symbols[stack -> top - 2] == "E")) {
+          (strcmp(stack -> symbols[stack -> top], "E") == 0) &&
+          (strcmp(stack -> symbols[stack -> top - 1], "+") == 0) &&
+          (strcmp(stack -> symbols[stack -> top - 2], "E") == 0)) {
             //remove the symbols from the stack
             pop(stack);
             pop(stack);
@@ -128,9 +144,9 @@ int reduce(Stack* stack) {
         } 
         //RULE 2: E -> E * E
         else if(stack -> top >= 2 &&
-          (stack -> symbols[stack -> top] == "E") &&
-          (stack -> symbols[stack -> top - 1] == "*") &&
-          (stack -> symbols[stack -> top - 2] == "E")) {
+          (strcmp(stack -> symbols[stack -> top], "E") == 0) &&
+          (strcmp(stack -> symbols[stack -> top - 1], "*") == 0) &&
+          (strcmp(stack -> symbols[stack -> top - 2], "E") == 0)) {
             //remove the symbols from the stack
             pop(stack);
             pop(stack);
@@ -153,9 +169,9 @@ int reduce(Stack* stack) {
         }
         //RULE 4: E -> (E)
         else if(stack -> top >= 2 && 
-               (stack -> symbols[stack -> top] == ")") &&
-               (stack -> symbols[stack -> top - 1] == "E") &&
-               (stack -> symbols[stack -> top - 2] == "(")) {
+               (strcmp(stack -> symbols[stack -> top], ")") == 0) &&
+               (strcmp(stack -> symbols[stack -> top - 1], "E") == 0) &&
+               (strcmp(stack -> symbols[stack -> top - 2], "(") == 0)) {
                     //remove the symbols from the stack
                     pop(stack);
                     pop(stack);
